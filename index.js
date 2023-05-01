@@ -15,14 +15,54 @@ function createEmployeeRecords(records) {
   return employeeRecords;
 }
 
-function createTimeInEvent(record, dateStamp) {
-  let hourInt = parseInt(dateStamp.slice(-4));
-  let date = dateStamp.slice(0, 10);
-  console.log(date);
-  record.timeInEvents = [{ type: 'TimeIn', date: date, hour: hourInt }];
+function createTimeInEvent(record, dateTimeStamp) {
+  let [date, hour] = dateTimeStamp.split(' ');
+
+  record.timeInEvents.push({
+    type: 'TimeIn',
+    hour: parseInt(hour, 10),
+    date,
+  });
 
   return record;
-  // console.log(record);
 }
-// let bpRecord = createEmployeeRecord(['Byron', 'Poodle', 'Mascot', 3]);
-// createTimeInEvent(bpRecord, '2014-02-28 1400');
+
+function createTimeOutEvent(record, dateTimeStamp) {
+  let [date, hour] = dateTimeStamp.split(' ');
+
+  record.timeOutEvents.push({
+    type: 'TimeOut',
+    hour: parseInt(hour, 10),
+    date,
+  });
+  return record;
+}
+
+function hoursWorkedOnDate(record, dateStamp) {
+  let timeIn = record.timeInEvents.find((e) => e.date === dateStamp).hour;
+  let timeOut = record.timeOutEvents.find((e) => e.date === dateStamp).hour;
+  return (timeOut - timeIn) / 100;
+}
+
+function wagesEarnedOnDate(record, dateStamp) {
+  let wagesOnDate = hoursWorkedOnDate(record, dateStamp) * record.payPerHour;
+  return wagesOnDate;
+}
+
+function allWagesFor(record) {
+  const allWages = record.timeInEvents.map((day) => {
+    return wagesEarnedOnDate(record, day.date);
+  });
+  return allWages.reduce(
+    (accumulator, currentValue) => accumulator + currentValue
+  );
+}
+
+function calculatePayroll(records) {
+  const payrollAll = records.map((emp) => {
+    return allWagesFor(emp);
+  });
+  return payrollAll.reduce(
+    (accumulator, currentValue) => accumulator + currentValue
+  );
+}
